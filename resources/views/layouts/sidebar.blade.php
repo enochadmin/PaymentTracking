@@ -35,5 +35,31 @@
                 {{ __('Teams') }}
             </x-nav-link>
         @endif
+        @if(Auth::user()->hasRole('procurement'))
+            <x-nav-link :href="route('payment-documents.index')" :active="request()->routeIs('payment-documents.*')">
+                {{ __('Payment Documents') }}
+            </x-nav-link>
+        @endif
+
+        @if(Auth::user()->hasRole('procurement_reviewer'))
+            <x-nav-link :href="route('procurement-review.index')" :active="request()->routeIs('procurement-review.*')">
+                {{ __('Review Queue') }}
+            </x-nav-link>
+        @endif
+
+        @if(Auth::user()->hasRole('commercial'))
+            <x-nav-link :href="route('contracts.index')" :active="request()->routeIs('contracts.*')">
+                {{ __('Contracts') }}
+            </x-nav-link>
+            <x-nav-link :href="route('final-payment-requests.index')" :active="request()->routeIs('final-payment-requests.*')">
+                {{ __('Final Requests') }}
+            </x-nav-link>
+        @endif
+
+        @if(Auth::user()->hasRole('finance') || Auth::user()->hasRole('finance_approver') || Auth::user()->hasRole('finance_cheque_prepare'))
+            <x-nav-link :href="route('final-payment-requests.index')" :active="request()->routeIs('final-payment-requests.*')">
+                {{ __('Finance Approvals') }}
+            </x-nav-link>
+        @endif
     </nav>
 </aside>

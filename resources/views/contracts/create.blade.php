@@ -22,16 +22,17 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <!-- Payment Request -->
             <div class="mb-4">
-                <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Payment Request</label>
-                @if(isset($paymentRequest))
-                    <input type="hidden" name="payment_request_id" value="{{ $paymentRequest->id }}">
-                    <p class="text-gray-900 dark:text-gray-100">{{ $paymentRequest->reason_for_payment }}</p>
+                <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Payment Document</label>
+                @if(isset($paymentDocument))
+                    <input type="hidden" name="payment_document_id" value="{{ $paymentDocument->id }}">
+                    <p class="text-gray-900 dark:text-gray-100">{{ $paymentDocument->reason_for_payment }}</p>
                 @else
-                    <select name="payment_request_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
-                        <option value="">Select Payment Request</option>
-                        @foreach($paymentRequests as $pr)
-                            <option value="{{ $pr->id }}">{{ $pr->reason_for_payment }} - {{ $pr->supplier->name }}</option>
-                        @endforeach
+                    <select name="payment_document_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                        <option value="">Select Payment Document</option>
+                        {{-- 
+                             In a real scenario, we might want to pass available documents to the view if creating from scratch.
+                             For now, this path might be less used or we need to pass $paymentDocuments from controller.
+                        --}}
                     </select>
                 @endif
             </div>
@@ -39,9 +40,9 @@
             <!-- Supplier -->
             <div class="mb-4">
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Supplier</label>
-                @if(isset($paymentRequest))
-                    <input type="hidden" name="supplier_id" value="{{ $paymentRequest->supplier_id }}">
-                    <p class="text-gray-900 dark:text-gray-100">{{ $paymentRequest->supplier->name }} ({{ $paymentRequest->supplier->supplier_type }})</p>
+                @if(isset($paymentDocument))
+                    <input type="hidden" name="supplier_id" value="{{ $paymentDocument->supplier_id }}">
+                    <p class="text-gray-900 dark:text-gray-100">{{ $paymentDocument->supplier->name }} ({{ $paymentDocument->supplier->supplier_type }})</p>
                 @else
                     <select name="supplier_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                         <option value="">Select Supplier</option>
@@ -55,9 +56,9 @@
             <!-- Project -->
             <div class="mb-4">
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2">Project</label>
-                @if(isset($paymentRequest))
-                    <input type="hidden" name="project_id" value="{{ $paymentRequest->project_id }}">
-                    <p class="text-gray-900 dark:text-gray-100">{{ $paymentRequest->project->name }}</p>
+                @if(isset($paymentDocument))
+                    <input type="hidden" name="project_id" value="{{ $paymentDocument->project_id }}">
+                    <p class="text-gray-900 dark:text-gray-100">{{ $paymentDocument->project->name }}</p>
                 @else
                     <select name="project_id" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                         <option value="">Select Project</option>
@@ -81,7 +82,7 @@
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="contract_title">
                     Contract Title *
                 </label>
-                <input type="text" name="contract_title" id="contract_title" value="{{ old('contract_title', isset($paymentRequest) ? $paymentRequest->reason_for_payment : '') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <input type="text" name="contract_title" id="contract_title" value="{{ old('contract_title', isset($paymentDocument) ? $paymentDocument->reason_for_payment : '') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
             </div>
 
             <!-- Contract Type -->
@@ -91,8 +92,8 @@
                 </label>
                 <select name="contract_type" id="contract_type" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
                     <option value="">Select Type</option>
-                    <option value="Subcontractor" {{ old('contract_type', isset($paymentRequest) && $paymentRequest->supplier->supplier_type === 'Subcontractor' ? 'Subcontractor' : '') === 'Subcontractor' ? 'selected' : '' }}>Subcontractor</option>
-                    <option value="Consultant" {{ old('contract_type', isset($paymentRequest) && $paymentRequest->supplier->supplier_type === 'Consultant' ? 'Consultant' : '') === 'Consultant' ? 'selected' : '' }}>Consultant</option>
+                    <option value="Subcontractor" {{ old('contract_type', isset($paymentDocument) && $paymentDocument->supplier->supplier_type === 'Subcontractor' ? 'Subcontractor' : '') === 'Subcontractor' ? 'selected' : '' }}>Subcontractor</option>
+                    <option value="Consultant" {{ old('contract_type', isset($paymentDocument) && $paymentDocument->supplier->supplier_type === 'Consultant' ? 'Consultant' : '') === 'Consultant' ? 'selected' : '' }}>Consultant</option>
                 </select>
             </div>
 
@@ -117,7 +118,7 @@
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="contract_value">
                     Contract Value *
                 </label>
-                <input type="number" step="0.01" name="contract_value" id="contract_value" value="{{ old('contract_value', isset($paymentRequest) ? $paymentRequest->amount : '') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <input type="number" step="0.01" name="contract_value" id="contract_value" value="{{ old('contract_value', isset($paymentDocument) ? $paymentDocument->amount : '') }}" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
             </div>
 
             <!-- Currency -->
@@ -125,7 +126,7 @@
                 <label class="block text-gray-700 dark:text-gray-300 text-sm font-bold mb-2" for="currency">
                     Currency *
                 </label>
-                <input type="text" name="currency" id="currency" value="{{ old('currency', isset($paymentRequest) ? $paymentRequest->currency : 'USD') }}" maxlength="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
+                <input type="text" name="currency" id="currency" value="{{ old('currency', isset($paymentDocument) ? $paymentDocument->currency : 'USD') }}" maxlength="3" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 dark:text-gray-300 dark:bg-gray-700 leading-tight focus:outline-none focus:shadow-outline" required>
             </div>
 
             <!-- Status -->

@@ -11,11 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('payment_requests', function (Blueprint $table) {
+        Schema::create('payment_documents', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained(); // Requester
+            $table->foreignId('user_id')->constrained(); // Procurement Officer
+            $table->foreignId('procurement_reviewer_id')->nullable()->constrained('users')->onDelete('set null');
             $table->foreignId('project_id')->constrained();
             $table->foreignId('supplier_id')->constrained();
+            
+            // Payment details
+            $table->text('reason_for_payment')->nullable();
+            $table->string('responsible_person')->nullable();
+            $table->string('payment_type')->nullable(); // e.g., 'Advance', 'Final', 'Partial'
+            $table->date('received_date')->nullable();
+            $table->date('submission_date')->nullable();
+            $table->date('reviewed_date')->nullable();
             
             $table->decimal('amount', 15, 2);
             $table->string('currency', 3)->default('USD');
@@ -23,20 +32,10 @@ return new class extends Migration
             
             // Files
             $table->string('invoice_path')->nullable();
-            $table->string('boq_path')->nullable(); // Bill of Quantities
             $table->string('delivery_note_path')->nullable();
             
             // Workflow
-            $table->string('status')->default('draft'); // draft, submitted, commercial_approved, finance_approved, paid, rejected
-            
-            // Commercial
-            $table->string('contract_link')->nullable(); // Or link to a Contract model if exists
-            $table->decimal('contract_value', 15, 2)->nullable(); // Snapshot or reference
-            
-            // Finance
-            $table->text('finance_comments')->nullable();
-            $table->string('cheque_number')->nullable();
-            $table->date('payment_date')->nullable();
+            $table->enum('status', ['draft', 'submitted', 'approved', 'rejected'])->default('draft');
             
             $table->timestamps();
             $table->softDeletes();
@@ -48,6 +47,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('payment_requests');
+        Schema::dropIfExists('payment_documents');
     }
 };
