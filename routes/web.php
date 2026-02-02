@@ -10,6 +10,7 @@ use App\Http\Controllers\PaymentDocumentController;
 use App\Http\Controllers\ProcurementReviewController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\FinalPaymentRequestController;
+use App\Http\Controllers\SessionController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -25,11 +26,15 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update'); 
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index');
     // Resource routes for application models
     Route::resource('users', UserController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::resource('projects', ProjectController::class);
     Route::resource('banks', BankController::class);
+    
+    Route::get('/teams/{team}/members', [TeamController::class, 'addMembersForm'])->name('teams.members.form');
+    Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->name('teams.members.add');
     Route::resource('teams', TeamController::class);
     
     // Payment Documents (Procurement Officer)

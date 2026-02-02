@@ -21,6 +21,7 @@ class UserRequest extends FormRequest
             'password' => [$this->isMethod('post') ? 'required' : 'nullable', 'string', 'min:6'],
             'roles' => ['nullable', 'array'],
             'roles.*' => ['integer', 'exists:roles,id'],
+            'team_id' => ['nullable', 'exists:teams,id'],
         ];
     }
 }

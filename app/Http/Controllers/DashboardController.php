@@ -19,7 +19,43 @@ class DashboardController extends Controller
         
         // Pick the highest priority role
         if ($user->hasRole('admin')) {
-            return view('dashboard');
+             // Admin Stats
+            $stats = [
+                'totalUsers' => \App\Models\User::count(),
+                'totalSuppliers' => \App\Models\Supplier::count(),
+                'totalProjects' => \App\Models\Project::count(),
+                'totalBanks' => \App\Models\Bank::count(),
+                'totalTeams' => \App\Models\Team::count(),
+                'totalPaymentRequests' => PaymentDocument::count(),
+                'pendingPaymentRequests' => PaymentDocument::where('status', 'submitted')->count(), // Or FinalRequests
+                'paidPaymentRequests' => FinalPaymentRequest::where('status', 'paid')->count(),
+            ];
+
+            // Charts Data
+            
+            // 1. Users by Role
+            // This requires a join with roles table if using spatie/laravel-permission or similar, 
+            // but for simplicity assuming we might just count users for now or use a relationship.
+            // If User model has roles relationship:
+            $usersByRole = \App\Models\User::get()->pluck('roles')->flatten()->pluck('name')->countBy();
+            
+            // 2. Payment Documents by Status
+            $docsByStatus = PaymentDocument::select('status', \DB::raw('count(*) as count'))
+                ->groupBy('status')
+                ->pluck('count', 'status');
+                
+             // 3. Projects with most documents (Top 5)
+            $topProjects = PaymentDocument::select('project_id', \DB::raw('count(*) as count'))
+                ->groupBy('project_id')
+                ->with('project')
+                ->orderByDesc('count')
+                ->take(5)
+                ->get()
+                ->map(function($item) {
+                    return ['name' => $item->project->name ?? 'Unknown', 'count' => $item->count];
+                });
+
+            return view('dashboard', compact('stats', 'usersByRole', 'docsByStatus', 'topProjects'));
         }
         
         if ($user->hasRole('procurement')) {
@@ -30,14 +66,48 @@ class DashboardController extends Controller
                 ->get();
             
             // Stats
+            // 1. Total Received Documents & Total Amount
+            $totalReceived = PaymentDocument::where('user_id', $user->id)->count();
+            $totalAmount = PaymentDocument::where('user_id', $user->id)->sum('amount');
+            
+            // 2. Top Responsible Person
+            // We find the most frequent name in the 'responsible_person' column for this user's documents
+            $topResponsiblePerson = PaymentDocument::where('user_id', $user->id)
+                ->select('responsible_person', \DB::raw('count(*) as count'))
+                ->groupBy('responsible_person')
+                ->orderByDesc('count')
+                ->first();
+                
+            // 3. Document Status Distribution (Pie Chart)
+            $statusDistribution = PaymentDocument::where('user_id', $user->id)
+                ->selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
+                
+            // 4. Documents by Responsible Person (List)
+            $documentsByResponsiblePerson = PaymentDocument::where('user_id', $user->id)
+                ->select('responsible_person', \DB::raw('count(*) as count'), \DB::raw('sum(amount) as total_amount'))
+                ->groupBy('responsible_person')
+                ->orderByDesc('count')
+                ->take(5)
+                ->get();
+            
             $stats = [
-                'total' => PaymentDocument::where('user_id', $user->id)->count(),
+                'total' => $totalReceived,
+                'totalAmount' => $totalAmount,
+                'topPerson' => $topResponsiblePerson ? $topResponsiblePerson->responsible_person : 'N/A',
+                'topPersonCount' => $topResponsiblePerson ? $topResponsiblePerson->count : 0,
                 'approved' => PaymentDocument::where('user_id', $user->id)->where('status', 'approved')->count(),
                 'submitted' => PaymentDocument::where('user_id', $user->id)->where('status', 'submitted')->count(),
                 'rejected' => PaymentDocument::where('user_id', $user->id)->where('status', 'rejected')->count(),
             ];
 
-            return view('dashboards.procurement', compact('myDocuments', 'stats'));
+            return view('dashboards.procurement', compact(
+                'myDocuments', 
+                'stats',
+                'statusDistribution',
+                'documentsByResponsiblePerson'
+            ));
         }
         
         if ($user->hasRole('procurement_reviewer')) {
@@ -71,15 +141,62 @@ class DashboardController extends Controller
             $recentContracts = Contract::latest()->take(5)->get();
             $myFinalRequests = FinalPaymentRequest::where('commercial_user_id', $user->id)->latest()->take(5)->get();
             
-            // Stats
+            // --- Advanced Stats for Commercial Dashboard ---
+            
+            // 1. Total Contracts & Value
+            $totalContractsCount = Contract::count();
+            $totalContractsValue = Contract::sum('contract_value');
+            
+            // 2. Active Contracts
+            $activeContractsCount = Contract::where('status', 'active')->count();
+            
+            // 3. Expiring Contracts (Active & End Date within 30 days)
+            $expiringContractsCount = Contract::where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->where('end_date', '<=', now()->addDays(30))
+                ->count();
+                
+            $expiringContracts = Contract::where('status', 'active')
+                ->where('end_date', '>=', now())
+                ->where('end_date', '<=', now()->addDays(30))
+                ->orderBy('end_date')
+                ->take(5)
+                ->get();
+
+            // 4. Contracts by Status (For Pie Chart)
+            // We need a collection like: ['active' => 10, 'completed' => 5, ...]
+            $contractsByStatus = Contract::selectRaw('status, count(*) as count')
+                ->groupBy('status')
+                ->pluck('count', 'status');
+                
+            // 5. Contracts by Supplier (Top 5 by count)
+            $contractsBySupplier = Contract::selectRaw('supplier_id, count(*) as count')
+                ->groupBy('supplier_id')
+                ->with('supplier') // Assuming relationship exists
+                ->orderByDesc('count')
+                ->take(5)
+                ->get();
+            
+            // Base Stats (legacy structure, can be kept or merged)
             $stats = [
                 'pendingContracts' => PaymentDocument::where('status', 'approved')->doesntHave('finalPaymentRequests')->count(),
-                'totalContracts' => Contract::count(),
+                'totalContracts' => $totalContractsCount,
+                'totalContractValue' => $totalContractsValue,
+                'activeContracts' => $activeContractsCount,
+                'expiringContracts' => $expiringContractsCount,
                 'pendingFinalRequests' => FinalPaymentRequest::where('status', 'submitted_to_finance')->count(),
                 'totalFinalRequests' => FinalPaymentRequest::count(),
             ];
 
-            return view('dashboards.commercial', compact('approvedDocs', 'recentContracts', 'myFinalRequests', 'stats'));
+            return view('dashboards.commercial', compact(
+                'approvedDocs', 
+                'recentContracts', 
+                'myFinalRequests', 
+                'stats',
+                'contractsByStatus',
+                'contractsBySupplier',
+                'expiringContracts'
+            ));
         }
         
         if ($user->hasRole('finance') || $user->hasRole('finance_approver')) {
