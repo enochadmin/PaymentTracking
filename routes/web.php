@@ -31,6 +31,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('users', UserController::class);
     Route::resource('suppliers', SupplierController::class);
     Route::resource('projects', ProjectController::class);
+    Route::patch('/banks/{bank}/toggle-active', [BankController::class, 'toggleActive'])->name('banks.toggle-active');
     Route::resource('banks', BankController::class);
     
     Route::get('/teams/{team}/members', [TeamController::class, 'addMembersForm'])->name('teams.members.form');

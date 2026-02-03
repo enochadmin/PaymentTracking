@@ -79,7 +79,6 @@
                     </main>
                 </div>
             </div>
-            </div>
         </div>
         
         <script>

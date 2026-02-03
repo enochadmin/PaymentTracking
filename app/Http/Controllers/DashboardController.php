@@ -85,12 +85,19 @@ class DashboardController extends Controller
                 ->pluck('count', 'status');
                 
             // 4. Documents by Responsible Person (List)
-            $documentsByResponsiblePerson = PaymentDocument::where('user_id', $user->id)
-                ->select('responsible_person', \DB::raw('count(*) as count'), \DB::raw('sum(amount) as total_amount'))
+            // 4. Documents by Responsible Person (List)
+            $topPersons = PaymentDocument::where('user_id', $user->id)
+                ->select('responsible_person', \DB::raw('count(*) as count'))
                 ->groupBy('responsible_person')
                 ->orderByDesc('count')
                 ->take(5)
-                ->get();
+                ->get()
+                ->map(function($item) {
+                     return [
+                        'name' => $item->responsible_person,
+                        'count' => $item->count
+                    ];
+                });
             
             $stats = [
                 'total' => $totalReceived,
@@ -106,7 +113,7 @@ class DashboardController extends Controller
                 'myDocuments', 
                 'stats',
                 'statusDistribution',
-                'documentsByResponsiblePerson'
+                'topPersons'
             ));
         }
         
