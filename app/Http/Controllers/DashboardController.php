@@ -109,11 +109,50 @@ class DashboardController extends Controller
                 'rejected' => PaymentDocument::where('user_id', $user->id)->where('status', 'rejected')->count(),
             ];
 
+            // 5. Suppliers by Type (Chart)
+            $suppliersByType = \App\Models\Supplier::selectRaw('supplier_type, count(*) as count')
+                ->groupBy('supplier_type')
+                ->pluck('count', 'supplier_type');
+
+            // 6. Document Activity (Received vs Reviewed over time - last 30 days)
+            $startDate = now()->subDays(30);
+            
+            $receivedDaily = PaymentDocument::where('user_id', $user->id)
+                ->where('received_date', '>=', $startDate)
+                ->selectRaw('DATE(received_date) as date, count(*) as count')
+                ->groupBy('date')
+                ->pluck('count', 'date')
+                ->toArray();
+
+            $reviewedDaily = PaymentDocument::where('user_id', $user->id)
+                ->where('reviewed_date', '>=', $startDate)
+                ->selectRaw('DATE(reviewed_date) as date, count(*) as count')
+                ->groupBy('date')
+                ->pluck('count', 'date')
+                ->toArray();
+
+            // Merge dates for x-axis
+            $allDates = array_unique(array_merge(array_keys($receivedDaily), array_keys($reviewedDaily)));
+            sort($allDates);
+            
+            $activityData = [
+                'dates' => $allDates,
+                'received' => [],
+                'reviewed' => []
+            ];
+
+            foreach ($allDates as $date) {
+                $activityData['received'][] = $receivedDaily[$date] ?? 0;
+                $activityData['reviewed'][] = $reviewedDaily[$date] ?? 0;
+            }
+
             return view('dashboards.procurement', compact(
                 'myDocuments', 
                 'stats',
                 'statusDistribution',
-                'topPersons'
+                'topPersons',
+                'suppliersByType',
+                'activityData'
             ));
         }
         

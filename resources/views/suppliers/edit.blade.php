@@ -6,7 +6,8 @@
     <form method="POST" action="{{ route('suppliers.update', $supplier) }}" class="space-y-4">
         @csrf
         @method('PUT')
-        <div><label for="name">Name</label><input type="text" id="name" name="name" value="{{ old('name', $supplier->name) }}"></div>
+        <div><label for="name" class="block font-medium text-sm text-gray-700 dark:text-gray-300">Name</label><input type="text" id="name" name="name" value="{{ old('name', $supplier->name) }}" class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"></div>
+        <div><label for="tin_number" class="block font-medium text-sm text-gray-700 dark:text-gray-300">Tin Number</label><input type="text" id="tin_number" name="tin_number" value="{{ old('tin_number', $supplier->tin_number) }}" class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"></div>
         <div><label for="contact_person">Contact person</label><input type="text" id="contact_person" name="contact_person" value="{{ old('contact_person', $supplier->contact_person) }}"></div>
         <div><label for="email">Email</label><input type="email" id="email" name="email" value="{{ old('email', $supplier->email) }}"></div>
         <div><label for="phone">Phone</label><input type="text" id="phone" name="phone" value="{{ old('phone', $supplier->phone) }}"></div>

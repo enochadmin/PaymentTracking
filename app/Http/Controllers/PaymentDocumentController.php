@@ -41,7 +41,11 @@ class PaymentDocumentController extends Controller
     {
         $projects = Project::all();
         $suppliers = Supplier::all();
-        return view('payment_documents.create', compact('projects', 'suppliers'));
+        // Fetch users in 'Procurement' team
+        $procurementTeam = \App\Models\Team::where('name', 'Procurement')->first();
+        $procurementUsers = $procurementTeam ? $procurementTeam->users : collect([]);
+        
+        return view('payment_documents.create', compact('projects', 'suppliers', 'procurementUsers'));
     }
 
     /**
@@ -116,7 +120,12 @@ class PaymentDocumentController extends Controller
         
         $projects = Project::all();
         $suppliers = Supplier::all();
-        return view('payment_documents.edit', compact('paymentDocument', 'projects', 'suppliers'));
+
+        // Fetch users in 'Procurement' team
+        $procurementTeam = \App\Models\Team::where('name', 'Procurement')->first();
+        $procurementUsers = $procurementTeam ? $procurementTeam->users : collect([]);
+
+        return view('payment_documents.edit', compact('paymentDocument', 'projects', 'suppliers', 'procurementUsers'));
     }
 
     /**

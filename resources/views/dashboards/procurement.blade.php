@@ -42,8 +42,24 @@
         <!-- Document Status Chart -->
         <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 lg:col-span-1">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Document Status</h3>
-            <div class="h-80">
+            <div class="h-64">
                 <canvas id="documentStatusChart"></canvas>
+            </div>
+        </div>
+        
+        <!-- Suppliers Chart -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 lg:col-span-1">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Suppliers by Type</h3>
+            <div class="h-64">
+                <canvas id="suppliersChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Activity Chart -->
+        <div class="bg-white dark:bg-gray-800 shadow-md rounded-xl p-6 lg:col-span-1">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Activity (30 Days)</h3>
+            <div class="h-64">
+                <canvas id="activityChart"></canvas>
             </div>
         </div>
 
@@ -145,18 +161,20 @@
 @section('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const ctx = document.getElementById('documentStatusChart')?.getContext('2d');
-        if (ctx) {
+        const statusColors = {
+            'draft': '#9CA3AF', 'submitted': '#F59E0B', 'approved': '#10B981',
+            'rejected': '#EF4444', 'default': '#6366F1'
+        };
+
+        // 1. Document Status Chart
+        const ctxStatus = document.getElementById('documentStatusChart')?.getContext('2d');
+        if (ctxStatus) {
             const data = @json($statusDistribution);
-            const statusColors = {
-                'draft': '#9CA3AF', 'submitted': '#F59E0B', 'approved': '#10B981',
-                'rejected': '#EF4444', 'default': '#6366F1'
-            };
             const labels = Object.keys(data);
             const values = Object.values(data);
             const colors = labels.map(status => statusColors[status.toLowerCase()] || statusColors['default']);
 
-            new Chart(ctx, {
+            new Chart(ctxStatus, {
                 type: 'doughnut',
                 data: {
                     labels: labels.map(l => l.charAt(0).toUpperCase() + l.slice(1)),
@@ -170,12 +188,70 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#374151'
-                            }
+                        legend: { position: 'bottom', labels: { color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#374151' } }
+                    }
+                }
+            });
+        }
+
+        // 2. Suppliers Chart
+        const ctxSuppliers = document.getElementById('suppliersChart')?.getContext('2d');
+        if (ctxSuppliers) {
+            const data = @json($suppliersByType);
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+            
+            new Chart(ctxSuppliers, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: ['#3B82F6', '#8B5CF6', '#10B981', '#F59E0B', '#EF4444'], // Blue, Purple, Green, Yellow, Red
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#374151' } }
+                    }
+                }
+            });
+        }
+
+        // 3. Activity Chart
+        const ctxActivity = document.getElementById('activityChart')?.getContext('2d');
+        if (ctxActivity) {
+            const data = @json($activityData);
+            
+            new Chart(ctxActivity, {
+                type: 'bar',
+                data: {
+                    labels: data.dates,
+                    datasets: [
+                        {
+                            label: 'Received',
+                            data: data.received,
+                            backgroundColor: '#6366F1', // Indigo
+                        },
+                        {
+                            label: 'Reviewed',
+                            data: data.reviewed,
+                            backgroundColor: '#10B981', // Emerald
                         }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#4B5563' } },
+                        y: { ticks: { color: document.documentElement.classList.contains('dark') ? '#9CA3AF' : '#4B5563' }, beginAtZero: true }
+                    },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { color: document.documentElement.classList.contains('dark') ? '#D1D5DB' : '#374151' } }
                     }
                 }
             });

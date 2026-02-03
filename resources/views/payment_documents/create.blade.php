@@ -88,7 +88,15 @@
                 
                 <div>
                     <label for="responsible_person" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Responsible Person</label>
-                    <input type="text" name="responsible_person" id="responsible_person" class="mt-1 focus:ring-indigo-500 focus:border-indigo-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" value="{{ old('responsible_person') }}" required>
+                    <select id="responsible_person" name="responsible_person" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md dark:bg-gray-700 dark:border-gray-600 dark:text-white" required>
+                        <option value="">Select Responsible Person</option>
+                        @foreach($procurementUsers as $user)
+                            <option value="{{ $user->name }}" {{ old('responsible_person') == $user->name ? 'selected' : '' }}>{{ $user->name }}</option>
+                        @endforeach
+                    </select>
+                    @if($procurementUsers->isEmpty())
+                        <p class="mt-1 text-xs text-yellow-600 dark:text-yellow-400">No users found in Procurement team.</p>
+                    @endif
                     @error('responsible_person') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
                 </div>
 

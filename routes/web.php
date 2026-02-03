@@ -29,13 +29,21 @@ Route::middleware('auth')->group(function () {
     Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index');
     // Resource routes for application models
     Route::resource('users', UserController::class);
+    Route::get('/suppliers/template', [\App\Http\Controllers\SupplierImportController::class, 'template'])->name('suppliers.template');
+    Route::post('/suppliers/import', [\App\Http\Controllers\SupplierImportController::class, 'import'])->name('suppliers.import');
+    Route::get('/suppliers/export', [\App\Http\Controllers\SupplierImportController::class, 'export'])->name('suppliers.export');
     Route::resource('suppliers', SupplierController::class);
+    
+    Route::get('/projects/template', [\App\Http\Controllers\ProjectImportController::class, 'template'])->name('projects.template');
+    Route::post('/projects/import', [\App\Http\Controllers\ProjectImportController::class, 'import'])->name('projects.import');
+    Route::get('/projects/export', [\App\Http\Controllers\ProjectImportController::class, 'export'])->name('projects.export');
     Route::resource('projects', ProjectController::class);
     Route::patch('/banks/{bank}/toggle-active', [BankController::class, 'toggleActive'])->name('banks.toggle-active');
     Route::resource('banks', BankController::class);
     
     Route::get('/teams/{team}/members', [TeamController::class, 'addMembersForm'])->name('teams.members.form');
     Route::post('/teams/{team}/members', [TeamController::class, 'addMember'])->name('teams.members.add');
+    Route::delete('/teams/{team}/members/{user}', [TeamController::class, 'removeMember'])->name('teams.members.remove');
     Route::resource('teams', TeamController::class);
     
     // Payment Documents (Procurement Officer)

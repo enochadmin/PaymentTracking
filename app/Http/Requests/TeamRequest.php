@@ -22,7 +22,9 @@ class TeamRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255', 'unique:teams,name'],
+            'name' => ['required', 'string', 'max:255', 'unique:teams,name,' . $this->route('team')->id],
+            'manager_id' => ['nullable', 'exists:users,id'],
+        ];
         ];
     }
 }
