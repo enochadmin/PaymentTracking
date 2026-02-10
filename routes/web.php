@@ -61,6 +61,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('contracts', ContractController::class);
     Route::get('/payment-documents/{paymentDocument}/create-contract', [ContractController::class, 'createFromPaymentDocument'])
         ->name('contracts.createFromPaymentDocument');
+
+    // Approved Documents (Commercial)
+    Route::get('/commercial/approved-documents', [\App\Http\Controllers\ApprovedDocumentController::class, 'index'])
+        ->name('commercial.approved-documents.index');
         
     // Final Payment Requests (Commercial -> Finance)
     Route::resource('final-payment-requests', FinalPaymentRequestController::class);

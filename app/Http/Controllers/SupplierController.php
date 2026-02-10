@@ -29,7 +29,13 @@ class SupplierController extends Controller
 
     public function store(SupplierRequest $request)
     {
-        $supplier = Supplier::create($request->validated());
+        $data = $request->validated();
+        
+        if ($request->hasFile('business_license')) {
+            $data['business_license_path'] = $request->file('business_license')->store('business_licenses', 'public');
+        }
+
+        $supplier = Supplier::create($data);
         return redirect()->route('suppliers.index')->with('success', 'Supplier created');
     }
 
@@ -45,12 +51,26 @@ class SupplierController extends Controller
 
     public function update(SupplierRequest $request, Supplier $supplier)
     {
-        $supplier->update($request->validated());
+        $data = $request->validated();
+
+        if ($request->hasFile('business_license')) {
+            // Delete old file if exists
+            if ($supplier->business_license_path) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($supplier->business_license_path);
+            }
+            $data['business_license_path'] = $request->file('business_license')->store('business_licenses', 'public');
+        }
+
+        $supplier->update($data);
         return redirect()->route('suppliers.show', $supplier)->with('success', 'Supplier updated');
     }
 
     public function destroy(Supplier $supplier)
     {
+        if ($supplier->business_license_path) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($supplier->business_license_path);
+        }
+        
         $supplier->delete();
         return redirect()->route('suppliers.index')->with('success', 'Supplier removed');
     }

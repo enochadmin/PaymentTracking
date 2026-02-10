@@ -108,7 +108,7 @@
                     labels: Object.keys(usersData),
                     datasets: [{
                         data: Object.values(usersData),
-                        backgroundColor: ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
+                        backgroundColor: ['#f0bdbdff', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'],
                         borderWidth: 0
                     }]
                 },

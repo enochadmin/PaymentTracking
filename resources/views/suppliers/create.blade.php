@@ -3,7 +3,7 @@
 @section('content')
 <div class="container">
 <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-6">Create Supplier</h1>
-    <form method="POST" action="{{ route('suppliers.store') }}" class="space-y-4">
+    <form method="POST" action="{{ route('suppliers.store') }}" class="space-y-4" enctype="multipart/form-data">
         @csrf
         <div><label for="name" class="block font-medium text-sm text-gray-700 dark:text-gray-300">Name</label><input type="text" id="name" name="name" value="{{ old('name') }}" class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"></div>
         <div><label for="tin_number" class="block font-medium text-sm text-gray-700 dark:text-gray-300">Tin Number</label><input type="text" id="tin_number" name="tin_number" value="{{ old('tin_number') }}" class="block mt-1 w-full rounded-md border-gray-300 dark:border-gray-700 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 dark:text-gray-100"></div>
@@ -18,6 +18,11 @@
                     <option value="{{ $typeOption }}" {{ old('supplier_type') == $typeOption ? 'selected' : '' }}>{{ $typeOption }}</option>
                 @endforeach
             </select>
+        </div>
+        <div>
+            <label for="business_license" class="block font-medium text-sm text-gray-700 dark:text-gray-300">Business License (Optional)</label>
+            <input type="file" id="business_license" name="business_license" accept=".pdf,.jpg,.jpeg,.png" class="block mt-1 w-full text-sm text-gray-500 dark:text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 dark:file:bg-gray-800 dark:file:text-gray-200">
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Accepted formats: PDF, JPG, PNG. Max size: 10MB.</p>
         </div>
         <button type="submit">Create</button>
     </form>

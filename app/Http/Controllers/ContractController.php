@@ -92,7 +92,8 @@ class ContractController extends Controller
         }
 
         $data['user_id'] = Auth::id();
-        $data['status'] = 'draft'; 
+        // Use status from request if provided, otherwise default to draft
+        $data['status'] = $request->input('status', 'draft');
 
         $contract = Contract::create($data);
 
@@ -138,6 +139,7 @@ class ContractController extends Controller
             'scope_of_work' => 'nullable|string',
             'deliverables' => 'nullable|string',
             'status' => 'required|in:draft,active,completed,terminated',
+            'notes' => 'nullable|string',
             'contract_document' => 'nullable|file|mimes:pdf,doc,docx|max:10240',
         ]);
 

@@ -105,6 +105,15 @@
                 <span class="text-sm font-medium">{{ __('Contracts') }}</span>
             </x-sidebar-link>
 
+            <x-sidebar-link :href="route('commercial.approved-documents.index')" :active="request()->routeIs('commercial.approved-documents.*')">
+                <x-slot name="icon">
+                    <svg class="h-5 w-5 flex-shrink-0 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </x-slot>
+                <span class="text-sm font-medium">{{ __('Approved Documents') }}</span>
+            </x-sidebar-link>
+
             <x-sidebar-link :href="route('final-payment-requests.index')" :active="request()->routeIs('final-payment-requests.*')">
                 <x-slot name="icon">
                     <svg class="h-5 w-5 flex-shrink-0 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">

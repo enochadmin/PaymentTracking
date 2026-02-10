@@ -159,29 +159,87 @@ class DashboardController extends Controller
         if ($user->hasRole('procurement_reviewer')) {
             // Documents needing review
             $pendingReviews = PaymentDocument::where('status', 'submitted')->count();
-            $recentReviews = PaymentDocument::with('user')
+            
+            // Comprehensive Statistics
+            $stats = [
+                // Total counts
+                'total_received' => PaymentDocument::count(),
+                'pending' => PaymentDocument::where('status', 'submitted')->count(),
+                'approved' => PaymentDocument::where('status', 'approved')->count(),
+                'rejected' => PaymentDocument::where('status', 'rejected')->count(),
+                
+                // Deadline tracking
+                'expired_deadline' => PaymentDocument::where('status', 'submitted')
+                    ->expiredDeadline()
+                    ->count(),
+                'near_deadline' => PaymentDocument::where('status', 'submitted')
+                    ->nearDeadline()
+                    ->count(),
+                'on_track' => PaymentDocument::where('status', 'submitted')
+                    ->onTrackDeadline()
+                    ->count(),
+            ];
+            
+            // Documents with expired deadlines (urgent)
+            $expiredDocuments = PaymentDocument::with(['project', 'supplier', 'user'])
                 ->where('status', 'submitted')
-                ->latest('submission_date')
+                ->expiredDeadline()
+                ->orderBy('review_deadline')
+                ->get();
+            
+            // Documents near deadline (warning)
+            $nearDeadlineDocuments = PaymentDocument::with(['project', 'supplier', 'user'])
+                ->where('status', 'submitted')
+                ->nearDeadline()
+                ->orderBy('review_deadline')
+                ->get();
+            
+            // Documents on track
+            $onTrackDocuments = PaymentDocument::with(['project', 'supplier', 'user'])
+                ->where('status', 'submitted')
+                ->onTrackDeadline()
+                ->orderBy('review_deadline')
                 ->take(5)
                 ->get();
             
-            // Stats
-            $stats = [
-                'pending' => $pendingReviews,
-                'reviewed' => PaymentDocument::whereIn('status', ['approved', 'rejected'])->count(),
-                'approved' => PaymentDocument::where('status', 'approved')->count(),
-                'rejected' => PaymentDocument::where('status', 'rejected')->count(),
-            ];
+            // Recent reviews (pending)
+            $recentReviews = PaymentDocument::with(['project', 'supplier', 'user'])
+                ->where('status', 'submitted')
+                ->latest('submission_date')
+                ->take(10)
+                ->get();
+            
+            // Recently approved
+            $recentlyApproved = PaymentDocument::with(['project', 'supplier', 'user'])
+                ->where('status', 'approved')
+                ->latest('reviewed_date')
+                ->take(5)
+                ->get();
+            
+            // Recently rejected
+            $recentlyRejected = PaymentDocument::with(['project', 'supplier', 'user'])
+                ->where('status', 'rejected')
+                ->latest('reviewed_date')
+                ->take(5)
+                ->get();
 
-            return view('dashboards.procurement_reviewer', compact('pendingReviews', 'recentReviews', 'stats'));
+            return view('dashboards.procurement_reviewer', compact(
+                'pendingReviews', 
+                'stats',
+                'expiredDocuments',
+                'nearDeadlineDocuments',
+                'onTrackDocuments',
+                'recentReviews',
+                'recentlyApproved',
+                'recentlyRejected'
+            ));
         }
         
         if ($user->hasRole('commercial')) {
-            // Approved documents (eligible for contracts)
-            $approvedDocs = PaymentDocument::where('status', 'approved')
-                ->doesntHave('finalPaymentRequests')
+            // ALL Approved documents (available for contract creation)
+            $approvedDocs = PaymentDocument::with(['project', 'supplier', 'user'])
+                ->where('status', 'approved')
                 ->latest('reviewed_date')
-                ->take(10)
                 ->get();
                 
             $recentContracts = Contract::latest()->take(5)->get();
@@ -225,6 +283,7 @@ class DashboardController extends Controller
             
             // Base Stats (legacy structure, can be kept or merged)
             $stats = [
+                'approvedDocuments' => PaymentDocument::where('status', 'approved')->count(),
                 'pendingContracts' => PaymentDocument::where('status', 'approved')->doesntHave('finalPaymentRequests')->count(),
                 'totalContracts' => $totalContractsCount,
                 'totalContractValue' => $totalContractsValue,

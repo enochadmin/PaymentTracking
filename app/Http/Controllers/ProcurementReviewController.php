@@ -40,9 +40,6 @@ class ProcurementReviewController extends Controller
         return view('procurement_review.show', compact('paymentDocument'));
     }
 
-    /**
-     * Approve the payment document.
-     */
     public function approve(Request $request, PaymentDocument $paymentDocument)
     {
         if (!Auth::user()->can('payment_documents.approve')) {
@@ -53,19 +50,23 @@ class ProcurementReviewController extends Controller
             return back()->with('error', 'Document is not in submission status.');
         }
 
+        // Validate optional fields
+        $validated = $request->validate([
+            'review_notes' => 'nullable|string|max:5000',
+            'review_date' => 'nullable|date',
+        ]);
+
         $paymentDocument->update([
             'status' => 'approved',
             'procurement_reviewer_id' => Auth::id(),
-            'reviewed_date' => now()
+            'reviewed_date' => $validated['review_date'] ?? now(),
+            'review_notes' => $validated['review_notes'] ?? null,
         ]);
 
         return redirect()->route('procurement-review.index')
             ->with('success', 'Payment document approved successfully.');
     }
 
-    /**
-     * Reject the payment document.
-     */
     public function reject(Request $request, PaymentDocument $paymentDocument)
     {
         if (!Auth::user()->can('payment_documents.reject')) {
@@ -76,11 +77,20 @@ class ProcurementReviewController extends Controller
             return back()->with('error', 'Document is not in submission status.');
         }
 
-        // Reset to draft so procurement officer can edit and resubmit
+        // Validate required and optional fields
+        $validated = $request->validate([
+            'rejection_reason' => 'required|string|max:5000',
+            'review_notes' => 'nullable|string|max:5000',
+            'review_date' => 'nullable|date',
+        ]);
+
+        // Reset to rejected so procurement officer can see the reason
         $paymentDocument->update([
             'status' => 'rejected',
             'procurement_reviewer_id' => Auth::id(),
-            'reviewed_date' => now()
+            'reviewed_date' => $validated['review_date'] ?? now(),
+            'rejection_reason' => $validated['rejection_reason'],
+            'review_notes' => $validated['review_notes'] ?? null,
         ]);
 
         return redirect()->route('procurement-review.index')

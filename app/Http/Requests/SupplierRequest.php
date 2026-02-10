@@ -21,6 +21,7 @@ class SupplierRequest extends FormRequest
             'phone' => ['nullable', 'string', 'max:50'],
             'address' => ['nullable', 'string'],
             'supplier_type' => ['required', 'in:Supply only,Subcontractor,Consultant'],
+            'business_license' => ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png', 'max:10240'],
         ];
     }
 }
